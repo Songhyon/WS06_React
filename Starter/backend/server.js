@@ -7,7 +7,7 @@ const postsRouter = require('./routes/posts');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const publicDir = path.join(__dirname, 'public');
+const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
 
 // Connects to MongoDB using MONGODB_URI from the .env file
 async function connectToDatabase() {
@@ -24,13 +24,19 @@ async function connectToDatabase() {
   }
 }
 
-app.locals.publicDir = publicDir;
 app.use(express.json());
-app.use(express.static(publicDir));
 
 app.use('/api/posts', postsRouter);
 
-// 404 handler for unmatched routes
+
+app.use(express.static(frontendDist));
+
+app.get(/^\/(?!api).*/, (req, res, next) => {
+  res.sendFile(path.join(frontendDist, 'index.html'), (err) => {
+    if (err) next();
+  });
+});
+
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
